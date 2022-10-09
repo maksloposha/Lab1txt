@@ -1,31 +1,83 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        sorting();
-        //unification("A.txt","B.txt","C.txt");
+        int count = 0;
+        fileGeneration();
+        while (!fileIsSorted("A.txt")){
+            System.out.println(count++);
+            sorting();
+            clearFile("A.txt");
+            unification("A.txt","B.txt","C.txt");
+            clearFile("C.txt");
+            clearFile("B.txt");
+        }
         long endTime = System.currentTimeMillis();
         System.out.println(endTime-startTime);
 
+    }
+    public static boolean fileIsSorted(String fileName){
+        long[] previous = readFile(fileName,0);
+        while (previous[0] != -1 ){
+            long[] current = readFile(fileName, previous[1]);
+            if(current[0] != -1) {
+                if(IntegerComparatror.compare((int)(previous[0]), (int)current[0])) previous = current;
+                else return false;
+
+            }else return true;
+        }
+        return true;
+    }
+    public static void clearFile(String fileName) {
+        try {
+            PrintWriter writer = new PrintWriter(fileName);
+            writer.print("");
+            writer.close();
+        }catch (IOException exception){
+            System.out.println(exception.toString());
+        }
     }
     public static void unification(String fileA,String fileB,String fileC){
         long numBytesB = 0;
         long numBytesC = 0;
         File A = new File(fileA);
-        while (A.length()<18){
-            int a;
+        File B = new File(fileB);
+        File C = new File(fileC);
+        Integer a = null;
+        while (A.length() < B.length()+C.length()){
             long[] b = readFile(fileB, numBytesB);
             long[] c = readFile(fileC, numBytesC);
-            if(b[0]<c[0]){
+            if(b[0] == -1)  {
+                while (c[0] != -1){
+                    writeFile("A.txt", (int)c[0]);
+                    numBytesC = c[1];
+                    c = readFile(fileC, numBytesC);
+                }
+            } else if (c[0] == -1) {
+                while (b[0] != -1){
+                    writeFile("A.txt", (int)b[0]);
+                    numBytesB = b[1];
+                    b = readFile(fileB, numBytesB);
+
+                }
+            }
+            else if(a == null ||( a <= Objects.requireNonNull(b)[0] && a <= Objects.requireNonNull(c)[0]) ||
+                    ( a >= Objects.requireNonNull(b)[0] && a >= Objects.requireNonNull(c)[0])){
+                if(b[0] < c[0]){
+                    writeFile(fileA,a = (int)b[0]);
+                    numBytesB = b[1];
+                }else{
+                    writeFile(fileA,a = (int)c[0]);
+                    numBytesC = c[1];
+                }
+            }else if(a < b[0]){
                 writeFile(fileA,a = (int)b[0]);
                 numBytesB = b[1];
-            }else{
+            }else {
                 writeFile(fileA,a = (int)c[0]);
                 numBytesC = c[1];
             }
@@ -80,7 +132,7 @@ public class Main {
     public static void fileGeneration(){
         try (FileOutputStream fos = new FileOutputStream("A.txt")) {
             File file = new File("A.txt");
-            while (file.length() <= 1_000_024)
+            while (file.length() <= 200)
                 fos.write((Integer.toString((int) (Math.random() * 1000)) + " ").getBytes());
             fos.close();
             System.out.println(file.length());
@@ -97,7 +149,15 @@ public class Main {
             int a ;
             int count = 0;
             while ((a = fileInputStream.read()) != ' '){
-                if(a == -1) break;
+                if(a == -1 ) {
+                    if(resultNum == 0){
+                        resultNum = a;
+                        break;
+                    }
+                    else{
+                        break;
+                    }
+                }
                 resultNum = resultNum*10 + ((int) a - 48);
                 count++;
             }
