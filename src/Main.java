@@ -1,15 +1,14 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        int count = 0;
         fileGeneration();
         while (!fileIsSorted("A.txt")){
-            System.out.println(count++);
             sorting();
             clearFile("A.txt");
             unification("A.txt","B.txt","C.txt");
@@ -132,7 +131,7 @@ public class Main {
     public static void fileGeneration(){
         try (FileOutputStream fos = new FileOutputStream("A.txt")) {
             File file = new File("A.txt");
-            while (file.length() <= 200)
+            while (file.length() <= 1000_024)
                 fos.write((Integer.toString((int) (Math.random() * 1000)) + " ").getBytes());
             fos.close();
             System.out.println(file.length());
@@ -178,4 +177,19 @@ public class Main {
         }
 
     }
+    public static void partSort(String file){
+        long count = 0;
+        while (count < new File (file).length()){
+        long currentCount = 0;
+        ArrayList<Integer> list = new ArrayList<>();
+        while (currentCount < 100_000_024){
+            long[] countAndInt = readFile(file, currentCount);
+            list.add((int)countAndInt[0]);
+            currentCount = countAndInt[1];
+        }
+        count += currentCount;
+        Collections.sort(list);
+        for(int item: list){writeFile("A.txt",item);}
+    }
+}
 }
